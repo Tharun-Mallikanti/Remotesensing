@@ -1,0 +1,13 @@
+{% extends 'base.html'%}
+{%block body%}
+<div class="container" id="datasets"></div>
+<script>
+    console.log("fetcht ")
+    fetch("/get_datasets").then(data=>data.json()).then(data=>{
+        console.log(data)
+    }).catch(error=>{
+        console.log(error)
+    })
+</script>
+
+{%endblock%}

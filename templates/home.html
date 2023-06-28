@@ -1,0 +1,31 @@
+{% extends 'base.html'%}
+{%block body%}
+<div class="row container-fluid">
+    <div class="col-md-7 p-sm-5 my-sm-5 intro-text">
+      <h1 class="display-md-1 display-4 .content">Forest</h1>
+      <p class="display-md-2 content">
+        Discover the power of Random Forest Analysis in uncovering and visualizing changes in forest cover over time. Use the interactive map below to select an area of interest and specify the analysis parameters to generate insightful results. Gain valuable insights into forest dynamics and the impact of various factors on vegetation using this intuitive tool.
+      </p>
+    </div>
+    <div class="col-md-5 my-sm-4 my-3">
+      <div
+        id="carouselExampleSlidesOnly"
+        class="carousel slide"
+        data-bs-ride="carousel"
+        data-bs-interval="2000"
+      >
+        <div class="carousel-inner ms-auto">
+          <div class="carousel-item active text-center">
+            <img class="d-block w-75" src="{{ url_for('static', filename='images/c1-modified.png') }}" alt="forest1">
+          </div>
+          <div class="carousel-item text-center">
+            <img class="d-block w-75" src="{{ url_for('static', filename='images/c2-modified.png') }}" alt="forest2">
+          </div>
+          <div class="carousel-item text-center">
+            <img class="d-block w-75" src="{{ url_for('static', filename='images/c3-modified.png') }}" alt="forest3">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock %}

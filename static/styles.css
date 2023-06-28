@@ -1,0 +1,28 @@
+.nav {
+    overflow-x: hidden;
+    background: #799F0C;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to left, #ACBB78, #799F0C);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to left, #ACBB78, #799F0C); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+
+  }
+  .title{
+    color: white;
+    font-size: x-large;
+    font-weight: 400;
+  }
+.content{
+  font-family: 'Dancing Script', cursive;
+  font-size: x-large;
+  letter-spacing: 1px;
+}
+.scrollable-container {
+  height: 450px; /* Set the desired height of the scrollable container */
+  overflow-y: auto;  
+  width: 100%; 
+    /* Enable vertical scrolling */
+  
+}
+.scrollable-content {
+  width: 100%; /* Ensure the content takes up the full width of the container */
+}
