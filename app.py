@@ -16,6 +16,7 @@ import csv
 import plotly.graph_objs as go
 import plotly.offline as pyoff
 import plotly.io as pio
+import xarray as xr
 from geopy.geocoders import Nominatim
 matplotlib.use('Agg')
 def get_area_name(latitude, longitude):
@@ -54,14 +55,12 @@ def analysis(analysis_type):
     if request.method=="POST":
         data = request.get_json()
         print(data)
-        coordinates = data['coordinates']
-        time_range = (data['fromdate'], data['todate'])
-        study_area_lat = (coordinates[0][0], coordinates[1][0])
-        study_area_lon = (coordinates[1][1], coordinates[2][1])
-
         try:
             dc = datacube.Datacube(app='water_change_analysis')
-
+            coordinates = data['coordinates']
+            time_range = (data['fromdate'], data['todate'])
+            study_area_lat = (coordinates[0][0], coordinates[1][0])
+            study_area_lon = (coordinates[1][1], coordinates[2][1])
             ds = dc.load(product='s2a_sen2cor_granule',
                 x=study_area_lon,
                 y=study_area_lat,
@@ -74,9 +73,14 @@ def analysis(analysis_type):
                 res = (ds.nir - ds.red) / (ds.nir + ds.red)
             elif analysis_type=="ndwi":
                 res = (ds.green - ds.nir) / (ds.green + ds.nir)
+            elif analysis_type=="evi":
+                res=2.5*((ds.nir-ds.red)/(ds.nir+6*ds.red-7.5*ds.blue+1))
+                print(res)
+                res = xr.where(~np.isfinite(res), 0.0, res)
             elif analysis_type=="graph":
                 ndvi=(ds.nir - ds.red) / (ds.nir + ds.red)
                 evi=2.5*((ds.nir-ds.red)/(ds.nir+6*ds.red-7.5*ds.blue+1))
+                evi = xr.where(~np.isfinite(evi), 0.0, evi)
                 ndvi_threshold = 0.4
                 evi_threshold = 0.2
 
@@ -190,8 +194,6 @@ def analysis(analysis_type):
                     title='Forest Cover'
                 )
                 fig = go.Figure(data=plot_data, layout=plot_layout)
-
-                # Convert plot to JSON
                 plot_json = pio.to_json(fig)
 
                 area_name = get_area_name(np.mean(study_area_lat), np.mean(study_area_lon))
@@ -204,14 +206,15 @@ def analysis(analysis_type):
 
             res_start = res.sel(time=time_range[0][:4]).mean(dim='time')
             res_end = res.sel(time=time_range[1][:4]).mean(dim='time')
-            # res_diff = res_end - res_start
-
             if analysis_type=="ndvi":
                 title = 'Vegetation'
                 cmap = 'YlGn_r'
             elif analysis_type=="ndwi":
                 title = 'Water'
                 cmap = 'cividis'
+            elif analysis_type=="evi":
+                title = 'Enhanced vegetation index'
+                cmap = 'viridis'
 
             sub_res = res.isel(time=[0, -1])
             mean_res = res.mean(dim=['latitude', 'longitude'], skipna=True)
@@ -242,33 +245,9 @@ def analysis(analysis_type):
             plt.clf()
             area_name = get_area_name(np.mean(study_area_lat), np.mean(study_area_lon))
             print(area_name)
-            # return jsonify({"plot_url": plot_data,  "data": str(dict(request.form)), "coordinates": coordinates})
-            # return jsonify({"plot_url": plot_data,  "data": str(dict(request.form)), "coordinates": coordinates,"area_name":area_name})
             return jsonify({"plot_url": plot_data,  "data": str(dict(request.form)), "coordinates": coordinates,"area_name":area_name,"type": analysis_type, "mean_res_rounded": mean_res_rounded, "labels": labels})
         except Exception as e:
             return jsonify({"error": e})
     return jsonify({"error": "Invalid method: "+request.method})
-# @app.route('/get_datasets', methods=['GET'])
-# def get_datasets():
-#     dc = datacube.Datacube()
-#     print("getdqtankrgas")
-#     product = 's2a_sen2cor_granule'
-#     # Get the available datasets for the specified product
-#     datasets = dc.find_datasets(product=product)
-
-#     # Initialize an empty list to store the coordinates
-#     coordinates = []
-#     area_names=[]
-#     # Iterate over the datasets and extract the coordinates
-#     for dataset in datasets:
-#         bounds = dataset.bounds
-#         coordinates.append([[bounds.left, bounds.bottom], [bounds.right, bounds.top]])
-
-#     # Print the coordinates
-#     for coord in coordinates:
-#         area_names.append(get_area_name(np.mean([coord[0][0],coord[1][0]]), np.mean([coord[0][1],coord[1][1]])))
-#     print(area_names)
-#     print(coordinates)
-#     return jsonify({'coordinates': coordinates,'area_names':area_names})
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

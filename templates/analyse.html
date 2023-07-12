@@ -25,7 +25,8 @@
                         <option selected>-- Select --</option>
                         <option value="ndvi">NDVI</option>
                         <option value="ndwi">NDWI</option>
-                        <option value="graph">Graphs</option>
+                        <option value="evi">EVI</option>
+                        <option value="graph">Random Forest Analysis</option>
                     </select>
                 </div>
                 <button class="btn btn-success mx-5 my-5" id="analyseBut" >Analyse</button>
@@ -71,10 +72,10 @@
 <script type="text/javascript">
     var map;
     var marker;
-    var map = L.map('map').setView([15.733048, 80.945512], 13);
+    var map = L.map('map').setView([19.19, 78.68], 9);
     var coordinates = [];
     var all_colors=[];
-    var fetched=[];
+    var fetched = {'ndvi': [], 'ndwi': [],'evi':[]};
     function getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
@@ -92,7 +93,12 @@
         cardBlock1.style.display="none"
         cardBlock2.style.display="none"
         graphCardBlock.style.display="none"
-        plotContainer.innerHTML=``;
+        chart.data.datasets = [];
+        var ctx = documeny.getElementById("myChart").getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        chart.update();
+        var graphDiv = document.getElementById('graph');
+        Plotly.purge(graphDiv);
       }
 
     let toggleButton = document.getElementById("analyseBut")
@@ -197,7 +203,13 @@
                 }
             }
             else{
-                if(fetched.includes(cor)){
+                if(fetched.ndvi.includes(cor) && document.getElementById("type").value=='ndvi'){
+                    continue;
+                }
+                else if(fetched.ndwi.includes(cor) && document.getElementById("type").value=='ndwi'){
+                    continue;
+                }
+                else if(fetched.evi.includes(cor) && document.getElementById("type").value=='evi'){
                     continue;
                 }
                 let data = {
@@ -214,7 +226,7 @@
                         body: JSON.stringify(data)
                     })
                     const data1= await result.json()
-                    if (fetched.length == 0) {
+                    if (fetched.ndvi.length == 0 && fetched.ndwi.length == 0 && fetched.evi.length == 0 ) {
                         console.log("object")
                         chart = new Chart(document.getElementById('myChart'), {
                             type: 'line',
@@ -238,9 +250,16 @@
                     img.innerHTML +=  `<div class ="card  mt-2" style="width:100%;"><div class="ms-3 mt-3"><svg width="40" height="20" style="margin-right: 10px;">
                         <rect width="40" height="20" style="fill: ${all_colors[i]}; stroke: ${all_colors[i]}; stroke-width: 5; fill-opacity: 0.2;"></rect>
                     </svg> ${data1.area_name}</div><img id="res_img" src="data:image/png;base64, ${data1.plot_url}" alt="graph"> <div>`
-                        
-
-                    fetched.push(cor)
+                    
+                    if(document.getElementById("type").value=='ndvi'){
+                        fetched.ndvi.push(cor);
+                    }
+                    else if(document.getElementById("type").value=='evi'){
+                        fetched.evi.push(cor);
+                    }
+                    else{
+                        fetched.ndwi.push(cor);
+                    }
                     console.log("0")
                     chart.data.datasets.push({
                         label: data1.area_name+"("+data1.type+")",
