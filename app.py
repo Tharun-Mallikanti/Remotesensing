@@ -66,9 +66,10 @@ def analysis(analysis_type):
                 y=study_area_lat,
                 time=time_range,
                 measurements=['red', 'green', 'blue', 'nir'],
-                output_crs='EPSG:4326',
-                resolution=(-0.00027, 0.00027)
+                output_crs='EPSG:6933',
+                resolution=(-30, 30)
             )
+            ds = odc.algo.to_f32(ds)
             if analysis_type=="ndvi":
                 res = (ds.nir - ds.red) / (ds.nir + ds.red)
             elif analysis_type=="ndwi":
@@ -203,9 +204,7 @@ def analysis(analysis_type):
                     
             else:
                 return jsonify({"error": "Invalid type"})
-
-            res_start = res.sel(time=time_range[0][:4]).mean(dim='time')
-            res_end = res.sel(time=time_range[1][:4]).mean(dim='time')
+            
             if analysis_type=="ndvi":
                 title = 'Vegetation'
                 cmap = 'YlGn_r'
@@ -217,22 +216,34 @@ def analysis(analysis_type):
                 cmap = 'viridis'
 
             sub_res = res.isel(time=[0, -1])
-            mean_res = res.mean(dim=['latitude', 'longitude'], skipna=True)
-            mean_res_rounded = list(map(lambda x: round(x, 4), mean_res.values.tolist()))
+
+            mean_res = res.mean(dim=['x', 'y'], skipna=True)
+            mean_res_rounded = np.array(list(map(lambda x: round(x, 4), mean_res.values.tolist())))
+            
+            mean_res_rounded = mean_res_rounded[np.logical_not(np.isnan(mean_res_rounded))]
+            mean_res_rounded = [0 if (i>1 or i<-1) else i for i in mean_res_rounded]
             labels = list(map(lambda x: x.split('T')[0], [i for i in np.datetime_as_string(res.time.values).tolist()]))    
 
-            plt.figure(figsize=(10, 6))
-            gs = gridspec.GridSpec(2, 2)
+            # plt.figure(figsize=(10, 6))
+            # gs = gridspec.GridSpec(2, 2)
 
-            plt.subplot(gs[0, 0])
-            plt.imshow(res_start, cmap=cmap, vmin=-1, vmax=1)
-            plt.title(title+' '+data['fromdate'][:4])
+            # plt.subplot(gs[0, 0])
+            # plt.imshow(res_start, cmap=cmap, vmin=-1, vmax=1)
+            # plt.title(title+' '+data['fromdate'][:4])
 
-            plt.subplot(gs[0, 1])
-            plt.imshow(res_end, cmap=cmap, vmin=-1, vmax=1)
-            plt.title(title+' '+data['todate'][:4])
+            # plt.subplot(gs[0, 1])
+            # plt.imshow(res_end, cmap=cmap, vmin=-1, vmax=1)
+            # plt.title(title+' '+data['todate'][:4])
 
-            plt.colorbar()
+            # plt.colorbar()
+
+            # now = datetime.now()
+            # timestamp = now.strftime("%d/%m/%Y at %I:%M:%S %p")
+            # plt.xlabel(timestamp)
+
+            plot = sub_res.plot(col='time', col_wrap=2)
+            for ax, time in zip(plot.axes.flat, sub_res.time.values):
+                ax.set_title(str(time).split('T')[0])
 
             now = datetime.now()
             timestamp = now.strftime("%d/%m/%Y at %I:%M:%S %p")
