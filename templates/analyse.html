@@ -29,8 +29,8 @@
                         <option value="graph">Random Forest Analysis</option>
                     </select>
                 </div>
-                <button class="btn btn-success mx-5 my-5" id="analyseBut" >Analyse</button>
-                <button class="btn btn-primary mx-5 my-5" onclick="Clear()">Clear analysis</button>
+                <button class="btn btn-success mx-5 my-5" id="analyseBut" type="submit" >Analyse</button>
+                <button class="btn btn-primary mx-5 my-5" onclick="Clear()" type="reset">Clear analysis</button>
             </form>
         </div>
     </div>
@@ -42,7 +42,7 @@
         </div>
         
         <div class="col-md-6 mb-3 bg-light" id="card2" style="display: none;">
-            <canvas id="myChart" style="height:100%"></canvas>
+            <canvas id="myChart"></canvas>
         </div>
     </div>
     <div class ="scrollable-container card " id="graphCard" style="display: none;">
@@ -50,6 +50,15 @@
     
         </div>
     </div>
+    <div id="loading" class="loading" style="display:none">
+        <div class="spinner" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </div>
+      <button id="backToTopBtn" class="back-to-top-btn" onclick="scrollToTop()" title="Go to top">
+        <i class="fa-solid fa-arrow-up fa-bounce fa-lg" style="color: #19065b;"></i>
+      </button>
+      
 </div>
 
 
@@ -154,6 +163,13 @@
         }
     });
 
+    var bounds = [[18.8823135665104,78.1492640061872],[19.8871534401748,79.1940462547119]];
+
+    // create an orange rectangle
+    L.rectangle(bounds, {color: "#72A0C1", weight: 1}).addTo(map);
+
+    // zoom the map to the rectangle bounds
+    map.fitBounds(bounds);
     
     var all_cordinates=[];
     function getPolygonCoords(coords) {
@@ -165,8 +181,38 @@
         console.log(polygonCoords);
         all_cordinates.push(polygonCoords);
     }
-    async function submitValue(event) {
-        event.preventDefault()
+    
+    function scrollToDiv(id) {
+        const element = document.getElementById(id);
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    window.onscroll = function() {
+    scrollFunction();
+    };
+
+    function scrollFunction() {
+    var backToTopBtn = document.getElementById("backToTopBtn");
+    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        backToTopBtn.style.display = "block";
+    } else {
+        backToTopBtn.style.display = "none";
+    }
+    }
+
+    function scrollToTop() {
+    document.body.scrollTop = 0; // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
+    }
+
+
+    async function submitValue(e) {
+        e.preventDefault()
+        if(!drawnItems.getLayers().length){
+            Swal.fire('No Area Selected', 'please select some area to proceed', 'error')
+            return;
+        }
+        document.getElementById('loading').style.display = 'block';
         let plotContainer = document.getElementById('plot-container');
         let img=document.getElementById("res_img");
         for(let i=0;i<all_cordinates.length;i++){
@@ -197,9 +243,13 @@
                     plotContainer.appendChild(graphDiv);
                     // Plot the graph inside the <div> element
                     Plotly.newPlot(graphDiv.id, plotData);
+                    scrollToDiv('graphCard')
                 } catch (error) {
                     console.log(error)
                     Swal.fire('Error', 'An error occured, please try again', 'error')
+                }
+                finally{
+                    document.getElementById('loading').style.display = 'none';   
                 }
             }
             else{
@@ -271,11 +321,17 @@
                     console.log("1")
                     console.log(data1.mean_res_rounded, chart)  
                     chart.update()
-                    console.log("3")   
+                    console.log("3")
+                    scrollToDiv('card1')   
                 }
                 catch (error) {
                     console.log(error)
                     img.innerHTML+= `Data not found.`
+                
+
+                }
+                finally{
+                    document.getElementById('loading').style.display = 'none'; 
                 }
             }
         }
