@@ -212,13 +212,18 @@
             Swal.fire('No Area Selected', 'please select some area to proceed', 'error')
             return;
         }
+        let typeVal=document.getElementById("type").value;
+        if (typeVal == "-- Select --") {
+            Swal.fire('Analysis type', 'please select some analysis to proceed', 'error')
+            return;
+        }
         document.getElementById('loading').style.display = 'block';
         let plotContainer = document.getElementById('plot-container');
         let img=document.getElementById("res_img");
         for(let i=0;i<all_cordinates.length;i++){
             let cor=all_cordinates[i];
             console.log(i, cor)
-            if (document.getElementById('type').value == 'graph') {
+            if (typeVal == 'graph') {
                 try {
                     const result = await fetch("/type/graph", {
                         method: 'POST',
@@ -253,13 +258,13 @@
                 }
             }
             else{
-                if(fetched.ndvi.includes(cor) && document.getElementById("type").value=='ndvi'){
+                if(fetched.ndvi.includes(cor) && typeVal=='ndvi'){
                     continue;
                 }
-                else if(fetched.ndwi.includes(cor) && document.getElementById("type").value=='ndwi'){
+                else if(fetched.ndwi.includes(cor) && typeVal=='ndwi'){
                     continue;
                 }
-                else if(fetched.evi.includes(cor) && document.getElementById("type").value=='evi'){
+                else if(fetched.evi.includes(cor) && typeVal=='evi'){
                     continue;
                 }
                 let data = {
@@ -288,23 +293,42 @@
                                 responsive: true,
                                 scales: {
                                     x: {
-                                        display: true
+                                        display: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Year-Month'
+                                        }
                                     },
                                     y: {
-                                        beginAtZero: true
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: data.type
+                                        }
                                     }
                                 }
                             }
                         });
                     }
-                    img.innerHTML +=  `<div class ="card  mt-2" style="width:100%;"><div class="ms-3 mt-3"><svg width="40" height="20" style="margin-right: 10px;">
-                        <rect width="40" height="20" style="fill: ${all_colors[i]}; stroke: ${all_colors[i]}; stroke-width: 5; fill-opacity: 0.2;"></rect>
-                    </svg> ${data1.area_name}</div><img id="res_img" src="data:image/png;base64, ${data1.plot_url}" alt="graph"> <div>`
+                    // img.innerHTML +=  `<div class ="card  mt-2" style="width:100%;"><div class="ms-3 mt-3"><svg width="40" height="20" style="margin-right: 10px;">
+                    //     <rect width="40" height="20" style="fill: ${all_colors[i]}; stroke: ${all_colors[i]}; stroke-width: 5; fill-opacity: 0.2;"></rect>
+                    // </svg> ${data1.area_name}</div><img id="res_img" src="data:image/png;base64, ${data1.plot_url}" alt="graph"> <div>`
                     
-                    if(document.getElementById("type").value=='ndvi'){
+                    img.innerHTML = `<div class="card my-2 shadow">
+                    <div class="card-body">
+                        <div class="justify-content-center align-items-center" style="display: flex;">
+                            <svg width="20" height="20" style="margin-right: 10px;">
+                                <rect width="20" height="20" style="fill: ${all_colors[i]}; stroke: ${all_colors[i]}; stroke-width: 5; fill-opacity: 0.2;"></rect>
+                            </svg>
+                            <h5 class="card-title mb-0">${data1.type?.toUpperCase()} - ${data1.area_name}</h5>
+                        </div>
+                        <img class="card-img-top res_img" src="data:image/png;base64, ${data1.plot_url}" alt="graph">
+                    </div>
+                </div>`+img.innerHTML;
+                    if(typeVal=='ndvi'){
                         fetched.ndvi.push(cor);
                     }
-                    else if(document.getElementById("type").value=='evi'){
+                    else if(typeVal=='evi'){
                         fetched.evi.push(cor);
                     }
                     else{
@@ -327,8 +351,6 @@
                 catch (error) {
                     console.log(error)
                     img.innerHTML+= `Data not found.`
-                
-
                 }
                 finally{
                     document.getElementById('loading').style.display = 'none'; 
