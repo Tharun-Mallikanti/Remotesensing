@@ -134,22 +134,12 @@ def analysis(analysis_type):
                     df["year-month"] = df["year"].astype('str') + "-" + df["month"].astype('str')
                     X["year-month"] = X["year"].astype('str') + "-" + X["month"].astype('str')
                     X = df[["year", "month"]]
-                y = df["dense_forest"]
-                y2 = df["open_forest"]
-                y3 = df["sparse_forest"]
+                y = df["forest"]
 
                 rf_regressor = RandomForestRegressor(n_estimators=100, random_state=101)
                 rf_regressor.fit(X, y)
                 y_pred = rf_regressor.predict([[2023, 5]])
                 print(df, y_pred)
-                rf_regressor2 = RandomForestRegressor(n_estimators=100, random_state=101)
-                rf_regressor2.fit(X, y2)
-                y_pred2 = rf_regressor2.predict([[2023, 5]])
-                print(df, y_pred2)
-                rf_regressor3 = RandomForestRegressor(n_estimators=100, random_state=101)
-                rf_regressor3.fit(X, y3)
-                y_pred3 = rf_regressor3.predict([[2023, 5]])
-                print(df, y_pred3)
 
                 df["year-month"] = df["year"].astype('str') + "-" + df["month"].astype('str')
                 X["year-month"] = X["year"].astype('str') + "-" + X["month"].astype('str')
@@ -159,34 +149,14 @@ def analysis(analysis_type):
                 plot_data = [
                     go.Scatter(
                         x = df['year-month'],
-                        y = df['dense_forest']/1000000,
-                        name = "Dense Actual"
+                        y = df['forest']/1000000,
+                        name = "Forest Actual"
                     ),
                     go.Scatter(
                         x = ['2024-05'],
                         y = y_pred/1000000,
-                        name = "Dense Predicted"
-                    ),
-                    go.Scatter(
-                        x = df['year-month'],
-                        y = df['open_forest']/1000000,
-                        name = "Open Actual"
-                    ),
-                    go.Scatter(
-                        x = ['2024-05'],
-                        y = y_pred2/1000000,
-                        name = "Open Predicted"
-                    ),
-                    go.Scatter(
-                        x = df['year-month'],
-                        y = df['sparse_forest']/1000000,
-                        name = "Sparse Actual"
-                    ),
-                    go.Scatter(
-                        x = ['2024-05'],
-                        y = y_pred3/1000000,
-                        name = "Sparse Predicted"
-                    ),
+                        name = "Forest Predicted"
+                    )
                 ]
 
                 print("Plot plotted")
@@ -223,23 +193,6 @@ def analysis(analysis_type):
             mean_res_rounded = mean_res_rounded[np.logical_not(np.isnan(mean_res_rounded))]
             mean_res_rounded = [0 if (i>1 or i<-1) else i for i in mean_res_rounded]
             labels = list(map(lambda x: x.split('T')[0], [i for i in np.datetime_as_string(res.time.values).tolist()]))    
-
-            # plt.figure(figsize=(10, 6))
-            # gs = gridspec.GridSpec(2, 2)
-
-            # plt.subplot(gs[0, 0])
-            # plt.imshow(res_start, cmap=cmap, vmin=-1, vmax=1)
-            # plt.title(title+' '+data['fromdate'][:4])
-
-            # plt.subplot(gs[0, 1])
-            # plt.imshow(res_end, cmap=cmap, vmin=-1, vmax=1)
-            # plt.title(title+' '+data['todate'][:4])
-
-            # plt.colorbar()
-
-            # now = datetime.now()
-            # timestamp = now.strftime("%d/%m/%Y at %I:%M:%S %p")
-            # plt.xlabel(timestamp)
 
             plot = sub_res.plot(col='time', col_wrap=2)
             for ax, time in zip(plot.axes.flat, sub_res.time.values):
