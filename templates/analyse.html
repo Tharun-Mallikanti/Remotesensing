@@ -56,7 +56,7 @@
         </div>
       </div>
       <button id="backToTopBtn" class="back-to-top-btn" onclick="scrollToTop()" title="Go to top">
-        <i class="fa-solid fa-arrow-up fa-bounce fa-lg" style="color: #19065b;"></i>
+        <i class="fa-solid fa-arrow-up fa-lg" style="color: #19065b;"></i>
       </button>
       
 </div>
@@ -66,6 +66,11 @@
     #map {
         height: 400px;
         width: 100%;
+    }
+    .loading{
+        padding: 15px;
+        background-color: rgba(0,0,0,0.3);
+        border-radius: 10px;
     }
 </style>
 
@@ -81,6 +86,7 @@
 <script type="text/javascript">
     var map;
     var marker;
+    let chart;
     var map = L.map('map').setView([19.67, 78.53], 11);
     var coordinates = [];
     var all_colors=[];
@@ -93,9 +99,12 @@
         }
         return color;
       }
-    
+      
+      let cardBlock1 = document.getElementById("card1")
+    let cardBlock2 = document.getElementById("card2")
+    let graphCardBlock = document.getElementById("graphCard")
       function Clear() {
-        all_cordinates.length=0;
+        all_cordinates=[];
         drawnItems.clearLayers();
         document.getElementById("res_img").innerHTML=" ";
         document.getElementById("plot-container").innerHTML=" ";
@@ -109,17 +118,6 @@
         var graphDiv = document.getElementById('graph');
         Plotly.purge(graphDiv);
       }
-
-    let toggleButton = document.getElementById("analyseBut")
-    let cardBlock1 = document.getElementById("card1")
-    let cardBlock2 = document.getElementById("card2")
-    let graphCardBlock = document.getElementById("graphCard")
-    toggleButton.addEventListener('click',()=>{
-        cardBlock1.style.display="block"
-        cardBlock2.style.display="block"
-        graphCardBlock.style.display="block"
-
-    })
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
@@ -241,6 +239,7 @@
                     console.log(data)
                     const plotData = await JSON.parse(data.plot);
                     console.log(plotData)
+                    document.getElementById("graphCard").style.display="block";
                     // Create a new <div> element for each graph with a unique identifier
                     const graphDiv = document.createElement('div');
                     graphDiv.id = 'graph-' + i;
@@ -313,7 +312,8 @@
                     // img.innerHTML +=  `<div class ="card  mt-2" style="width:100%;"><div class="ms-3 mt-3"><svg width="40" height="20" style="margin-right: 10px;">
                     //     <rect width="40" height="20" style="fill: ${all_colors[i]}; stroke: ${all_colors[i]}; stroke-width: 5; fill-opacity: 0.2;"></rect>
                     // </svg> ${data1.area_name}</div><img id="res_img" src="data:image/png;base64, ${data1.plot_url}" alt="graph"> <div>`
-                    
+                    document.getElementById("card1").style.display="block";
+                    document.getElementById("card2").style.display="block";
                     img.innerHTML = `<div class="card my-2 shadow">
                     <div class="card-body">
                         <div class="justify-content-center align-items-center" style="display: flex;">
@@ -335,6 +335,8 @@
                         fetched.ndwi.push(cor);
                     }
                     console.log("0")
+                    console.log("1")
+                    console.log(data1.mean_res_rounded, chart)
                     chart.data.datasets.push({
                         label: data1.area_name+"("+data1.type+")",
                         data: data1.mean_res_rounded,
@@ -342,8 +344,6 @@
                         borderColor: all_colors[i],
                         tension: 0.1
                     })
-                    console.log("1")
-                    console.log(data1.mean_res_rounded, chart)  
                     chart.update()
                     console.log("3")
                     scrollToDiv('card1')   

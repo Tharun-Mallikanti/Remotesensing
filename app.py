@@ -61,13 +61,14 @@ def analysis(analysis_type):
             time_range = (data['fromdate'], data['todate'])
             study_area_lat = (coordinates[0][0], coordinates[1][0])
             study_area_lon = (coordinates[1][1], coordinates[2][1])
-            ds = dc.load(product='s2a_sen2cor_granule',
+            ds = dc.load(product=['s2a_sen2cor_granule',"s2b_sen2cor_granule"],
                 x=study_area_lon,
                 y=study_area_lat,
                 time=time_range,
                 measurements=['red', 'green', 'blue', 'nir'],
                 output_crs='EPSG:6933',
-                resolution=(-30, 30)
+                resolution=(-30, 30),
+                dask_chunks={'time': 1}
             )
             ds = odc.algo.to_f32(ds)
             if analysis_type=="ndvi":
