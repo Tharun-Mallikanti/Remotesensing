@@ -68,7 +68,7 @@
         width: 100%;
     }
     .loading{
-        padding: 15px;
+        padding: 25px;
         background-color: rgba(0,0,0,0.3);
         border-radius: 10px;
     }
@@ -119,6 +119,19 @@
         Plotly.purge(graphDiv);
       }
 
+      fetch('/datasets').then(data => data.json()).then(async data => {
+            console.log(data.coordinates)
+            for (const bounds of data.coordinates) {
+                let boundsReversed = bounds.map((e)=>{
+                    return e.map((e1)=>{
+                        return  [e1[1], e1[0]]
+                    })
+                })
+                var boundingBox = L.polygon(boundsReversed, { color: '#72A0C1', weight: 2, fill: true });
+                boundingBox.addTo(map);
+            }
+        }).catch(error => console.log(error))
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
         maxZoom: 18,
@@ -161,13 +174,13 @@
         }
     });
 
-    var bounds = [[18.8823135665104,78.1492640061872],[19.8871534401748,79.1940462547119]];
+    // var bounds = [[18.8823135665104,78.1492640061872],[19.8871534401748,79.1940462547119]];
 
-    // create an orange rectangle
-    L.rectangle(bounds, {color: "#72A0C1", weight: 1}).addTo(map);
+    // // create an orange rectangle
+    // L.rectangle(bounds, {color: "#72A0C1", weight: 1}).addTo(map);
 
-    // zoom the map to the rectangle bounds
-    map.fitBounds(bounds);
+    // // zoom the map to the rectangle bounds
+    // map.fitBounds(bounds);
     
     var all_cordinates=[];
     function getPolygonCoords(coords) {
@@ -215,7 +228,6 @@
             Swal.fire('Analysis type', 'please select some analysis to proceed', 'error')
             return;
         }
-        document.getElementById('loading').style.display = 'block';
         let plotContainer = document.getElementById('plot-container');
         let img=document.getElementById("res_img");
         for(let i=0;i<all_cordinates.length;i++){
@@ -223,6 +235,7 @@
             console.log(i, cor)
             if (typeVal == 'graph') {
                 try {
+                    document.getElementById('loading').style.display = 'block';
                     const result = await fetch("/type/graph", {
                         method: 'POST',
                         headers: {
@@ -257,13 +270,7 @@
                 }
             }
             else{
-                if(fetched.ndvi.includes(cor) && typeVal=='ndvi'){
-                    continue;
-                }
-                else if(fetched.ndwi.includes(cor) && typeVal=='ndwi'){
-                    continue;
-                }
-                else if(fetched.evi.includes(cor) && typeVal=='evi'){
+                if(fetched[typeVal].includes(cor)){
                     continue;
                 }
                 let data = {
@@ -272,6 +279,7 @@
                     todate: document.getElementById("todate").value,
                 }
                 try {
+                    document.getElementById('loading').style.display = 'block';
                     const result = await fetch("/type/" + document.getElementById("type").value, {
                         method: 'POST',
                         headers: {
@@ -302,7 +310,7 @@
                                         beginAtZero: true,
                                         title: {
                                             display: true,
-                                            text: data.type
+                                            text: typeVal.toUpperCase()
                                         }
                                     }
                                 }

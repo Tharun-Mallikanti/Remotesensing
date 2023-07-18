@@ -45,11 +45,6 @@ def home():
 def analyse():
     return render_template("analyse.html")
 
-
-@app.route('/datasets', methods=['GET'])
-def datasets():
-    return render_template("datasets.html")
-
 @app.route('/type/<analysis_type>', methods=['GET','POST'])
 def analysis(analysis_type):
     if request.method=="POST":
@@ -214,5 +209,27 @@ def analysis(analysis_type):
         except Exception as e:
             return jsonify({"error": e})
     return jsonify({"error": "Invalid method: "+request.method})
+@app.route('/datasets', methods=['GET'])
+def datasets():
+    dc = datacube.Datacube(app='datacube-example')
+    product_name = ['s2a_sen2cor_granule']
+
+    p = []
+
+    for j in product_name:
+        datasets = dc.find_datasets(product=j)
+        d = []
+        if len(datasets) == 0:
+            print('No datasets found for the specified query parameters.')
+        else:
+            for i in datasets:
+                ds_loc = i.metadata_doc['geometry']['coordinates']
+                d.append(ds_loc)
+        unique_list = [x for i, x in enumerate(d) if x not in d[:i]]
+        p+=unique_list
+    unique_list = [x for i, x in enumerate(p) if x not in p[:i]]
+    print(unique_list)
+    return jsonify({'coordinates': unique_list})
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
